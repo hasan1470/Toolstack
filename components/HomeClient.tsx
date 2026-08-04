@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { categories, tools } from "../lib/tools";
 
@@ -12,12 +13,15 @@ function readList(key: string) {
 }
 
 export default function HomeClient() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
   const [dark, setDark] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeResult, setActiveResult] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function HomeClient() {
     document.documentElement.dataset.theme = useDark ? "dark" : "light";
     const onKey = (event: KeyboardEvent) => {
       if ((event.key === "/" || (event.ctrlKey && event.key.toLowerCase() === "k")) && document.activeElement?.tagName !== "INPUT") {
-        event.preventDefault(); searchRef.current?.focus();
+        event.preventDefault(); setSearchOpen(true); searchRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -43,6 +47,19 @@ export default function HomeClient() {
     const haystack = `${tool.name} ${tool.description} ${tool.tags.join(" ")}`.toLowerCase();
     return matchesCategory && haystack.includes(query.toLowerCase()) && (!showFavorites || favorites.includes(tool.slug));
   }), [category, query, favorites, showFavorites]);
+
+  const searchResults = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const ranked = tools.filter((tool) => !term || `${tool.name} ${tool.description} ${tool.tags.join(" ")} ${tool.category}`.toLowerCase().includes(term));
+    return ranked.slice(0, 7);
+  }, [query]);
+
+  function handleSearchKey(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") { event.preventDefault(); setActiveResult((activeResult + 1) % Math.max(searchResults.length, 1)); }
+    if (event.key === "ArrowUp") { event.preventDefault(); setActiveResult((activeResult - 1 + Math.max(searchResults.length, 1)) % Math.max(searchResults.length, 1)); }
+    if (event.key === "Escape") { setSearchOpen(false); searchRef.current?.blur(); }
+    if (event.key === "Enter" && searchResults[activeResult]) { router.push(`/tools/${searchResults[activeResult].slug}`); }
+  }
 
   const recentTools = recent.map((slug) => tools.find((tool) => tool.slug === slug)).filter(Boolean).slice(0, 4);
 
@@ -69,13 +86,21 @@ export default function HomeClient() {
       </header>
 
       <section className="hero shell">
-        <div className="eyebrow"><span className="pulse" /> 14 tools · zero uploads · always free</div>
+        <div className="eyebrow"><span className="pulse" /> {tools.length} tools · zero uploads · always free</div>
         <h1>Your everyday tools.<br/><em>Ridiculously fast.</em></h1>
         <p className="hero-copy">A focused collection of private, browser-based utilities for developers, creators, and everyone who wants to get small things done.</p>
-        <div className="search-wrap">
-          <span className="search-icon">⌕</span>
-          <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search tools" placeholder="What do you need to do?" />
-          <kbd>Ctrl K</kbd>
+        <div className="search-shell">
+          <div className="search-wrap">
+            <span className="search-icon">⌕</span>
+            <input ref={searchRef} value={query} onFocus={() => { setSearchOpen(true); setActiveResult(0); }} onBlur={() => setTimeout(() => setSearchOpen(false), 140)} onChange={(e) => { setQuery(e.target.value); setActiveResult(0); setSearchOpen(true); }} onKeyDown={handleSearchKey} role="combobox" aria-autocomplete="list" aria-label="Search tools" aria-expanded={searchOpen} aria-controls="tool-search-results" placeholder="Search PNG to PDF, merge PDF, JSON…" />
+            {query && <button className="search-clear" onMouseDown={(event) => event.preventDefault()} onClick={() => { setQuery(""); searchRef.current?.focus(); }} aria-label="Clear search">×</button>}
+            <kbd>Ctrl K</kbd>
+          </div>
+          {searchOpen && <div className="search-results" id="tool-search-results" role="listbox">
+            <div className="search-results-head"><span>{query ? `Best matches for “${query}”` : "Popular and new tools"}</span><small>↑↓ navigate · Enter open</small></div>
+            {searchResults.map((tool, index) => <Link role="option" aria-selected={index === activeResult} className={index === activeResult ? "active" : ""} href={`/tools/${tool.slug}`} key={tool.slug} onMouseEnter={() => setActiveResult(index)}><span className={`result-icon accent-bg-${tool.accent}`}>{tool.icon}</span><span><strong>{tool.name}</strong><small>{tool.description}</small></span><em>{tool.category}</em></Link>)}
+            {!searchResults.length && <div className="search-no-results"><strong>No matching tool yet</strong><span>Try “PDF”, “image”, “encode”, or “text”.</span></div>}
+          </div>}
         </div>
         <div className="quick-links"><span>Try</span>{tools.filter(t => t.popular).slice(0, 4).map(tool => <Link key={tool.slug} href={`/tools/${tool.slug}`}>{tool.name}</Link>)}</div>
       </section>
@@ -92,7 +117,7 @@ export default function HomeClient() {
       <section className="tools-section shell" id="tools">
         <div className="section-heading">
           <div><span className="section-number">01</span><h2>Pick a tool.<br/>Get it done.</h2></div>
-          <p>Everything runs locally on your device whenever possible. No waiting, no accounts, no nonsense.</p>
+          <p>Production-ready utilities with instant results. No waiting, no accounts, no nonsense.</p>
         </div>
 
         {recentTools.length > 0 && !query && category === "All" && !showFavorites && (
@@ -109,10 +134,11 @@ export default function HomeClient() {
         <div className="tool-grid">
           {filtered.map((tool, index) => (
             <article className={`tool-card accent-${tool.accent}`} key={tool.slug} style={{ "--delay": `${index * 35}ms` } as React.CSSProperties}>
+              <Link className="card-hit-area" href={`/tools/${tool.slug}`} aria-label={`Open ${tool.name}`} />
               <div className="card-top"><span className="tool-icon">{tool.icon}</span><button onClick={() => toggleFavorite(tool.slug)} className={favorites.includes(tool.slug) ? "star saved" : "star"} aria-label={`${favorites.includes(tool.slug) ? "Remove" : "Add"} ${tool.name} ${favorites.includes(tool.slug) ? "from" : "to"} favorites`}>★</button></div>
               <div className="badges">{tool.popular && <span>Popular</span>}{tool.new && <span className="new-badge">New</span>}<small>{tool.category}</small></div>
               <h3>{tool.name}</h3><p>{tool.description}</p>
-              <Link href={`/tools/${tool.slug}`} className="card-link">Open tool <span>→</span></Link>
+              <div className="card-link">Open tool <span>→</span></div>
             </article>
           ))}
         </div>

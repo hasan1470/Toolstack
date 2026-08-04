@@ -1,4 +1,4 @@
-export type ToolCategory = "Developer" | "Text" | "Security" | "Image" | "Color" | "Time";
+export type ToolCategory = "Developer" | "Text" | "Security" | "Image" | "PDF" | "Color" | "Time";
 
 export type ToolDefinition = {
   slug: string;
@@ -27,9 +27,14 @@ export const tools: ToolDefinition[] = [
   { slug: "timestamp-converter", name: "Timestamp Converter", description: "Convert Unix timestamps and human-readable dates.", category: "Time", icon: "◷", accent: "blue", tags: ["unix", "timestamp", "date", "timezone"] },
   { slug: "number-base", name: "Number Base Converter", description: "Convert decimal, binary, octal and hexadecimal values.", category: "Developer", icon: "01", accent: "violet", tags: ["binary", "decimal", "hex", "octal"] },
   { slug: "image-compressor", name: "Image Compressor", description: "Resize and compress images privately in your browser.", category: "Image", icon: "▧", accent: "lime", new: true, tags: ["image", "compress", "resize", "jpeg", "webp"] },
+  { slug: "image-converter", name: "Image Converter", description: "Convert PNG, JPG and WebP images to any common format.", category: "Image", icon: "↻", accent: "blue", popular: true, new: true, tags: ["png", "jpg", "jpeg", "webp", "convert", "transparent"] },
+  { slug: "background-remover", name: "Background Remover", description: "Remove plain and near-solid backgrounds with precision controls.", category: "Image", icon: "◌", accent: "violet", new: true, tags: ["background", "remove", "transparent", "png", "image"] },
+  { slug: "images-to-pdf", name: "Images to PDF", description: "Combine PNG and JPG images into one ordered PDF.", category: "PDF", icon: "▤", accent: "orange", popular: true, new: true, tags: ["png", "jpg", "jpeg", "pdf", "combine", "convert"] },
+  { slug: "pdf-merger", name: "Merge PDF", description: "Combine multiple PDF documents in your chosen order.", category: "PDF", icon: "⊕", accent: "red", popular: true, new: true, tags: ["pdf", "merge", "combine", "join"] },
+  { slug: "pdf-extractor", name: "Extract PDF Pages", description: "Create a new PDF from selected pages or page ranges.", category: "PDF", icon: "⇥", accent: "blue", new: true, tags: ["pdf", "split", "extract", "pages", "range"] },
 ];
 
-export const categories: Array<"All" | ToolCategory> = ["All", "Developer", "Text", "Security", "Image", "Color", "Time"];
+export const categories: Array<"All" | ToolCategory> = ["All", "Developer", "Text", "Security", "Image", "PDF", "Color", "Time"];
 
 export function getTool(slug: string) {
   return tools.find((tool) => tool.slug === slug);
