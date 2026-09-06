@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { siteUrl } from "../lib/site";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "toolstack.example";
-  const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-  const base = `${protocol}://${host}`;
+export function generateMetadata(): Metadata {
+  const base = siteUrl;
   return {
     metadataBase: new URL(base),
     title: { default: "Toolstack", template: "%s · Toolstack" },
@@ -18,5 +15,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><body>{children}</body></html>;
+  return <html lang="en" data-theme="dark" suppressHydrationWarning><body>{children}</body></html>;
 }

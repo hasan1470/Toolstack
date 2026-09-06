@@ -1,65 +1,74 @@
 # Toolstack
 
-A privacy-first collection of fast browser utilities for developers, creators, and everyday work.
+**19 practical tools. One private browser workspace.**
 
-## Run in VS Code
+Format JSON, convert images, merge PDFs, generate passwords, and finish everyday tasks without an account or file uploads.
 
-1. Open the `micro-tools` folder in VS Code.
-2. Open **Terminal → New Terminal**.
-3. Install the dependencies:
+![Toolstack — everyday tools, ridiculously fast](public/og.png)
 
-   ```bash
-   npm install
-   ```
+## What you can do
 
-4. Start the development server:
+| Workspace | Working features |
+| --- | --- |
+| Developer tools | JSON formatting and validation, UTF-8 Base64, URL encoding, UUID v4 batches, SHA-256/384/512 hashes, regex matching |
+| Writing tools | Word and character counts, reading time, eight case conversions, placeholder paragraphs |
+| Converters | HEX/RGB/HSL, Unix seconds and milliseconds, signed binary/octal/decimal/hex integers without precision loss |
+| Passwords | Cryptographic randomness, selectable character types, long word-based passphrases, copy to clipboard |
+| Images | WebP compression, PNG/JPEG/WebP conversion, plain-background removal with adjustable edges |
+| PDFs | Images to PDF, merge and reorder documents, extract selected pages and ranges |
 
-   ```bash
-   npm run dev
-   ```
+Search with **Ctrl/Cmd + K**, filter by category, save favorites, reopen recent tools, and switch between light and dark themes. Preferences stay on the current browser.
 
-5. Open the local URL printed in the terminal.
+## Try these workflows
 
-Changes to files inside `app`, `components`, or `lib` will refresh automatically.
+1. **JSON Formatter:** paste JSON, format or minify it, and copy the result. Invalid input produces a clear error.
+2. **PDF Merger:** select two documents, arrange their order, and download one combined PDF.
+3. **Image Converter:** choose a PNG, switch to JPEG or WebP, adjust quality, and download the result.
+4. **Number Base Converter:** try `0`, a negative hexadecimal value, or an integer larger than JavaScript's safe-number range.
 
-## Other commands
+## Run locally
+
+Requires **Node.js 22.13+** and npm.
 
 ```bash
-npm run build   # Create a production build
-npm run start   # Run the production build
-npm run lint    # Check the code
+git clone https://github.com/hasan1470/Toolstack.git
+cd Toolstack
+npm ci
+npm run dev
 ```
 
-## Deploy to Vercel
+Open [localhost:3000](http://localhost:3000). No database, API keys, or external storage services are required.
 
-Push the finished project to GitHub, import that repository in Vercel, and keep the detected framework as **Next.js**. No custom build settings are required.
+```bash
+npm run test:unit  # Regression checks for parsing, storage and password generation
+npm run lint      # ESLint
+npm run build     # Production build and TypeScript checks
+npm start         # Serve the production build
+```
 
-After choosing the final domain, add this Vercel environment variable so the sitemap uses it:
+## How it works
+
+Built with **Next.js 16, React 19, TypeScript, Tailwind CSS 4, and pdf-lib**. File operations run locally using browser Canvas and PDF APIs; randomness and hashing use Web Crypto. PDF code loads when a PDF tool is used.
 
 ```text
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+app/                         Routes, metadata, sitemap and global styling
+components/HomeClient.tsx    Search, categories, favorites and theme
+components/ToolWorkspace.tsx The 19 interactive workspaces
+lib/tools.ts                 Tool catalog
+lib/tool-utils.ts            Validated conversions, page parsing and safe preferences
+tests/                       Regression tests
 ```
 
-## Included tools
+## Deployment
 
-- JSON formatter and validator
-- Base64 encoder/decoder
-- URL encoder/decoder
-- UUID generator
-- SHA hash generator
-- Password and passphrase generator
-- Word and character counter
-- Text case converter
-- Lorem ipsum generator
-- Regex tester
-- HEX/RGB/HSL color converter
-- Unix timestamp converter
-- Number base converter
-- Private image compressor
-- PNG, JPG and WebP converter
-- Plain-background remover with precision controls
-- PNG/JPG images to PDF
-- PDF merger with file reordering
-- PDF page extractor
+Import this repository into Vercel and keep the detected **Next.js** defaults. No paid database or API is needed. Vercel supplies the production domain for metadata and the sitemap. For a custom domain, set `NEXT_PUBLIC_SITE_URL` to its full HTTPS URL and redeploy.
 
-MongoDB and Cloudinary can be added later when accounts, saved history, shared files, or persistent image storage are introduced.
+## Practical limits
+
+- Background removal works best on a plain, evenly lit background; it is a color-based operation, not AI subject segmentation.
+- PDF tools do not accept password-protected PDFs. Large files depend on available browser memory.
+- Image compression outputs WebP and limits the longest edge to 1,800 pixels. JPEG conversion uses a white background for transparency.
+- Preferences are device-local. The app does not provide cloud accounts or cross-device synchronization.
+- The compact passphrase dictionary uses at least 16 words; character mode produces shorter passwords.
+
+Created by [Abdullah Hasan](https://github.com/hasan1470).

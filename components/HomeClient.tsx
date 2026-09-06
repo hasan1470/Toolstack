@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { categories, tools } from "../lib/tools";
+import { readList, readPreference, writePreference } from "../lib/tool-utils";
 
 const FAVORITES_KEY = "toolstack:favorites";
 const RECENT_KEY = "toolstack:recent";
 
-function readList(key: string) {
-  try { return JSON.parse(localStorage.getItem(key) || "[]") as string[]; } catch { return []; }
-}
 
 export default function HomeClient() {
   const router = useRouter();
@@ -25,7 +23,7 @@ export default function HomeClient() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("toolstack:theme");
+    const saved = readPreference("toolstack:theme");
     const useDark = saved ? saved === "dark" : true;
     queueMicrotask(() => {
       setFavorites(readList(FAVORITES_KEY));
@@ -34,7 +32,7 @@ export default function HomeClient() {
     });
     document.documentElement.dataset.theme = useDark ? "dark" : "light";
     const onKey = (event: KeyboardEvent) => {
-      if ((event.key === "/" || (event.ctrlKey && event.key.toLowerCase() === "k")) && document.activeElement?.tagName !== "INPUT") {
+      if ((event.key === "/" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) && !document.activeElement?.matches("input, textarea, [contenteditable=true]")) {
         event.preventDefault(); setSearchOpen(true); searchRef.current?.focus();
       }
     };
@@ -65,13 +63,13 @@ export default function HomeClient() {
 
   function toggleFavorite(slug: string) {
     const next = favorites.includes(slug) ? favorites.filter((item) => item !== slug) : [slug, ...favorites];
-    setFavorites(next); localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+    setFavorites(next); writePreference(FAVORITES_KEY, JSON.stringify(next));
   }
 
   function toggleTheme() {
     const next = !dark; setDark(next);
     document.documentElement.dataset.theme = next ? "dark" : "light";
-    localStorage.setItem("toolstack:theme", next ? "dark" : "light");
+    writePreference("toolstack:theme", next ? "dark" : "light");
   }
 
   return (
@@ -92,13 +90,13 @@ export default function HomeClient() {
         <div className="search-shell">
           <div className="search-wrap">
             <span className="search-icon">⌕</span>
-            <input ref={searchRef} value={query} onFocus={() => { setSearchOpen(true); setActiveResult(0); }} onBlur={() => setTimeout(() => setSearchOpen(false), 140)} onChange={(e) => { setQuery(e.target.value); setActiveResult(0); setSearchOpen(true); }} onKeyDown={handleSearchKey} role="combobox" aria-autocomplete="list" aria-label="Search tools" aria-expanded={searchOpen} aria-controls="tool-search-results" placeholder="Search PNG to PDF, merge PDF, JSON…" />
+            <input ref={searchRef} value={query} onFocus={() => { setSearchOpen(true); setActiveResult(0); }} onBlur={() => setTimeout(() => setSearchOpen(false), 140)} onChange={(e) => { setQuery(e.target.value); setActiveResult(0); setSearchOpen(true); }} onKeyDown={handleSearchKey} role="combobox" aria-autocomplete="list" aria-label="Search tools" aria-expanded={searchOpen} aria-controls="tool-search-results" aria-activedescendant={searchOpen && searchResults[activeResult] ? `search-${searchResults[activeResult].slug}` : undefined} placeholder="Search PNG to PDF, merge PDF, JSON…" />
             {query && <button className="search-clear" onMouseDown={(event) => event.preventDefault()} onClick={() => { setQuery(""); searchRef.current?.focus(); }} aria-label="Clear search">×</button>}
             <kbd>Ctrl K</kbd>
           </div>
           {searchOpen && <div className="search-results" id="tool-search-results" role="listbox">
             <div className="search-results-head"><span>{query ? `Best matches for “${query}”` : "Popular and new tools"}</span><small>↑↓ navigate · Enter open</small></div>
-            {searchResults.map((tool, index) => <Link role="option" aria-selected={index === activeResult} className={index === activeResult ? "active" : ""} href={`/tools/${tool.slug}`} key={tool.slug} onMouseEnter={() => setActiveResult(index)}><span className={`result-icon accent-bg-${tool.accent}`}>{tool.icon}</span><span><strong>{tool.name}</strong><small>{tool.description}</small></span><em>{tool.category}</em></Link>)}
+            {searchResults.map((tool, index) => <Link id={`search-${tool.slug}`} role="option" aria-selected={index === activeResult} className={index === activeResult ? "active" : ""} href={`/tools/${tool.slug}`} key={tool.slug} onMouseEnter={() => setActiveResult(index)}><span className={`result-icon accent-bg-${tool.accent}`}>{tool.icon}</span><span><strong>{tool.name}</strong><small>{tool.description}</small></span><em>{tool.category}</em></Link>)}
             {!searchResults.length && <div className="search-no-results"><strong>No matching tool yet</strong><span>Try “PDF”, “image”, “encode”, or “text”.</span></div>}
           </div>}
         </div>
@@ -117,7 +115,7 @@ export default function HomeClient() {
       <section className="tools-section shell" id="tools">
         <div className="section-heading">
           <div><span className="section-number">01</span><h2>Pick a tool.<br/>Get it done.</h2></div>
-          <p>Production-ready utilities with instant results. No waiting, no accounts, no nonsense.</p>
+          <p>Useful utilities with instant results. No waiting, no accounts, no nonsense.</p>
         </div>
 
         {recentTools.length > 0 && !query && category === "All" && !showFavorites && (

@@ -9,8 +9,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "npm run lint && npm run build",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "test": "npm run test:unit && npm run lint && npm run build",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "next": "16.2.6",
