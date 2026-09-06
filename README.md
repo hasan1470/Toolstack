@@ -2,6 +2,8 @@
 
 **19 practical tools. One private browser workspace.**
 
+[**Open the live app →**](https://toolstack-lovat.vercel.app) · [Browse the tools](https://toolstack-lovat.vercel.app/#tools)
+
 Format JSON, convert images, merge PDFs, generate passwords, and finish everyday tasks without an account or file uploads.
 
 ![Toolstack — everyday tools, ridiculously fast](public/og.png)
